@@ -1,5 +1,5 @@
 FROM php:7.0-fpm
-MAINTAINER Kevin Monmousseau <kevin@guidap.co>
+LABEL authors="Kevin Monmousseau <kevin@guidap.co>,Sylvain Marty <sylvain@guidap.co>"
 
 ENV TERM=xterm
 
@@ -11,7 +11,7 @@ ENV BUILD_PKGS \
     libicu-dev
 
 RUN apt-get update \
-    && apt-get install  --no-install-recommends --no-install-suggests -y \
+    && apt-get install -y --no-install-recommends \
         $BUILD_PKGS \
         supervisor \
         git \
