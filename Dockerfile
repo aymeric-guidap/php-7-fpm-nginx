@@ -3,16 +3,13 @@ LABEL authors="Kevin Monmousseau <kevin@guidap.co>,Sylvain Marty <sylvain@guidap
 
 ENV TERM=xterm
 
-ENV BUILD_PKGS \
-    libmagickwand-dev \
-    libmagickcore-dev \
-    libcurl4-gnutls-dev \
-    zlib1g-dev \
-    libicu-dev
-
 RUN apt-get update \
-    && apt-get install -y --no-install-recommends \
-        $BUILD_PKGS \
+    && apt-get install -y \
+        libmagickwand-dev \
+        libmagickcore-dev \
+        libcurl4-gnutls-dev \
+        zlib1g-dev \
+        libicu-dev \
         supervisor \
         git \
         curl \
