@@ -4,7 +4,7 @@ LABEL authors="Kevin Monmousseau <kevin@guidap.co>,Sylvain Marty <sylvain@guidap
 ENV TERM=xterm
 
 RUN apt-get update \
-    && apt-get install -y \
+    && apt-get install -y --no-install-recommends \
         libmagickwand-dev \
         libmagickcore-dev \
         libcurl4-gnutls-dev \
