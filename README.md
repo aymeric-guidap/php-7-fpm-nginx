@@ -8,6 +8,6 @@ After making changes, simply run this command in the repository folder :
 docker build -t guidap/php-7-fpm-nginx .
 ```
 
-## Licence
+## License
 
 Project under GNU Lesser General Public License v3.0
