@@ -18,6 +18,8 @@ RUN apt-get update \
         make \
         awscli \
         libzip2 \
+        pngquant \
+        jpegoptim \
         && pecl install imagick \
         && docker-php-ext-enable imagick
 
