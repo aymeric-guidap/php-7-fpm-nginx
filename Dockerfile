@@ -1,4 +1,4 @@
-FROM php:7.0-fpm
+FROM php:7.2-fpm
 LABEL authors="Kevin Monmousseau <kevin@guidap.co>,Sylvain Marty <sylvain@guidap.co>"
 
 ENV TERM=xterm
@@ -17,15 +17,18 @@ RUN apt-get update \
         rsync \
         make \
         awscli \
-        libzip2 \
+        libzip4 \
         pngquant \
         jpegoptim \
+        gnupg \
+        dirmngr \
+        wget \
         && pecl install imagick \
         && docker-php-ext-enable imagick
 
 ## Nginx
-RUN apt-key adv --keyserver hkp://pgp.mit.edu:80 --recv-keys 573BFD6B3D8FBC641079A6ABABF5BD827BD9BF62 \
-	&& echo "deb http://nginx.org/packages/mainline/debian/ jessie nginx" >> /etc/apt/sources.list \
+RUN echo "deb http://nginx.org/packages/mainline/debian/ stretch nginx" >> /etc/apt/sources.list \
+    && wget -qO - http://nginx.org/keys/nginx_signing.key | apt-key add - \
 	&& apt-get update \
 	&& apt-get install --no-install-recommends --no-install-suggests -y \
         ca-certificates \
