@@ -82,10 +82,13 @@ RUN apt-get install -y --no-install-recommends libfontenc1 libxfont1 xfonts-75dp
     && dpkg -i /tmp/wkhtmltox.deb \
     && rm /tmp/wkhtmltox.deb
 
-# forward request and error logs to docker log collector
+# Forward request and error logs to docker log collector
 RUN ln -sf /dev/stdout /var/log/nginx/access.log \
-	&& ln -sf /dev/stderr /var/log/nginx/error.log \
-	&& echo Europe/Paris > /etc/timezone \
+	&& ln -sf /dev/stderr /var/log/nginx/error.log
+
+# Changing local time and fixing permissions
+RUN unlink /etc/localtime \
+    && ln -s /usr/share/zoneinfo/Europe/Paris /etc/localtime \
     && dpkg-reconfigure --frontend noninteractive tzdata \
     && chmod -R g+rwx /var/www/html \
     && umask 0007
