@@ -66,7 +66,7 @@ RUN curl -sS https://dl.yarnpkg.com/debian/pubkey.gpg | apt-key add - \
     && npm rebuild node-sass
 
 # Composer
-RUN curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer --version=1.8.6 \
+RUN curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer --version=1.10.16 \
     && rm -rf /tmp/* /var/tmp/*
 
 # Installing wkhtmltopdf
@@ -87,6 +87,8 @@ RUN unlink /etc/localtime \
     && umask 0007 \
     && mkfifo /var/stdout \
     && chmod 777 /var/stdout
+
+RUN composer global require hirak/prestissimo
 
 RUN composer global require hirak/prestissimo
 

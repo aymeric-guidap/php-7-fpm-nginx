@@ -1,0 +1,5 @@
+FROM guidap/php-7-fpm-nginx:v2.0.2
+
+# Node
+RUN curl -sL https://deb.nodesource.com/setup_10.x | bash \
+    && apt-get install -y nodejs
