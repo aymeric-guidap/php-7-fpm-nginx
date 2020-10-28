@@ -1,5 +1,5 @@
 FROM php:7.2-fpm
-LABEL authors="Kevin Monmousseau <kevin@guidap.co>,Sylvain Marty <sylvain@guidap.co>"
+LABEL authors="Sylvain Marty <sylvain@guidap.co>"
 
 ENV TERM=xterm
 
@@ -31,14 +31,7 @@ RUN echo "deb http://nginx.org/packages/mainline/debian/ stretch nginx" >> /etc/
     && wget -qO - http://nginx.org/keys/nginx_signing.key | apt-key add - \
 	&& apt-get update \
 	&& apt-get install --no-install-recommends --no-install-suggests -y \
-        ca-certificates \
-        nginx \
-        nginx-module-xslt \
-        nginx-module-geoip \
-        nginx-module-image-filter \
-        nginx-module-perl \
-        nginx-module-njs \
-        gettext-base
+        nginx
 
 RUN pecl install \
         imagick \
@@ -73,12 +66,12 @@ RUN curl -sS https://dl.yarnpkg.com/debian/pubkey.gpg | apt-key add - \
     && npm rebuild node-sass
 
 # Composer
-RUN curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer \
+RUN curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer --version=1.10.16 \
     && rm -rf /tmp/* /var/tmp/*
 
 # Installing wkhtmltopdf
-RUN apt-get install -y --no-install-recommends libfontenc1 libxfont1 xfonts-75dpi xfonts-base xfonts-encodings xfonts-utils \
-    && curl -sL https://downloads.wkhtmltopdf.org/0.12/0.12.5/wkhtmltox_0.12.5-1.stretch_amd64.deb --output /tmp/wkhtmltox.deb --silent \
+RUN apt-get install -y --no-install-recommends libfontenc1 xfonts-75dpi xfonts-base xfonts-encodings xfonts-utils \
+    && curl -sL https://github.com/wkhtmltopdf/packaging/releases/download/0.12.6-1/wkhtmltox_0.12.6-1.stretch_amd64.deb --output /tmp/wkhtmltox.deb --silent \
     && dpkg -i /tmp/wkhtmltox.deb \
     && rm /tmp/wkhtmltox.deb
 
@@ -91,7 +84,9 @@ RUN unlink /etc/localtime \
     && ln -s /usr/share/zoneinfo/Europe/Paris /etc/localtime \
     && dpkg-reconfigure --frontend noninteractive tzdata \
     && chmod -R g+rwx /var/www/html \
-    && umask 0007
+    && umask 0007 \
+    && mkfifo /var/stdout \
+    && chmod 777 /var/stdout
 
 RUN composer global require hirak/prestissimo
 
