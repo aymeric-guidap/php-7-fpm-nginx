@@ -1,6 +1,7 @@
 FROM php:7.2-fpm
 LABEL authors="Sylvain Marty <sylvain@guidap.co>"
 
+ARG ENV_LOG_STREAM=/var/
 ENV TERM=xterm
 
 RUN apt-get update \
@@ -52,10 +53,9 @@ RUN pecl install \
         gd
 
 COPY docker/php.ini /usr/local/etc/php/
-COPY docker/00-supervisor.conf /etc/supervisor/conf.d/
 
 # Node
-RUN curl -sL https://deb.nodesource.com/setup_10.x | bash \
+RUN curl -sL https://deb.nodesource.com/setup_14.x | bash \
     && apt-get install -y nodejs
 
 RUN curl -sS https://dl.yarnpkg.com/debian/pubkey.gpg | apt-key add - \
@@ -84,11 +84,7 @@ RUN unlink /etc/localtime \
     && ln -s /usr/share/zoneinfo/Europe/Paris /etc/localtime \
     && dpkg-reconfigure --frontend noninteractive tzdata \
     && chmod -R g+rwx /var/www/html \
-    && umask 0007 \
-    && mkfifo /var/stdout \
-    && chmod 777 /var/stdout
-
-RUN composer global require hirak/prestissimo
+    && umask 0007
 
 RUN composer global require hirak/prestissimo
 
