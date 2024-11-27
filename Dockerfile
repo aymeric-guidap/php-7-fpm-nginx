@@ -1,4 +1,4 @@
-FROM php:7.2-fpm
+FROM php:7.4-fpm
 LABEL authors="Sylvain Marty <sylvain@guidap.co>"
 
 ARG ENV_LOG_STREAM=/var/
@@ -11,6 +11,8 @@ RUN apt-get update \
         libcurl4-gnutls-dev \
         zlib1g-dev \
         libicu-dev \
+        libonig-dev \
+        libzip-dev \
         supervisor \
         git \
         curl \
@@ -18,14 +20,13 @@ RUN apt-get update \
         rsync \
         make \
         awscli \
-        libzip4 \
         pngquant \
         jpegoptim \
         gnupg \
         dirmngr \
         wget \
-        && pecl install imagick \
-        && docker-php-ext-enable imagick
+    && pecl install imagick \
+    && docker-php-ext-enable imagick
 
 ## Nginx
 RUN echo "deb http://nginx.org/packages/mainline/debian/ stretch nginx" >> /etc/apt/sources.list \
@@ -36,7 +37,7 @@ RUN echo "deb http://nginx.org/packages/mainline/debian/ stretch nginx" >> /etc/
 
 RUN pecl install \
         imagick \
-        xdebug \
+        xdebug-3.1.5 \
         unzip \
     && docker-php-ext-install \
         pdo_mysql \
@@ -66,7 +67,7 @@ RUN curl -sS https://dl.yarnpkg.com/debian/pubkey.gpg | apt-key add - \
     && npm rebuild node-sass
 
 # Composer
-RUN curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer --version=1.10.16 \
+RUN curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer --version=2.2.0 \
     && rm -rf /tmp/* /var/tmp/*
 
 # Installing wkhtmltopdf
@@ -85,8 +86,6 @@ RUN unlink /etc/localtime \
     && dpkg-reconfigure --frontend noninteractive tzdata \
     && chmod -R g+rwx /var/www/html \
     && umask 0007
-
-RUN composer global require hirak/prestissimo
 
 EXPOSE 80 443
 
