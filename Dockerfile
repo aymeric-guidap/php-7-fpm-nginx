@@ -1,86 +1,86 @@
-FROM php:7.4-fpm
-LABEL authors="Sylvain Marty <sylvain@guidap.co>"
+FROM php:8.2-fpm-bullseye
 
-ARG ENV_LOG_STREAM=/var/
+ARG LOG_STREAM=/var/stdout
 ENV TERM=xterm
 
-RUN apt-get update \
-    && apt-get install -y --no-install-recommends \
-        libmagickwand-dev \
-        libmagickcore-dev \
-        libcurl4-gnutls-dev \
-        zlib1g-dev \
-        libicu-dev \
-        libonig-dev \
-        libzip-dev \
-        supervisor \
-        git \
-        curl \
-        ssh \
-        rsync \
-        make \
-        awscli \
-        pngquant \
-        jpegoptim \
-        gnupg \
-        dirmngr \
-        wget \
-    && pecl install imagick \
-    && docker-php-ext-enable imagick
+# Update and install system dependencies
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    libmagickwand-dev \
+    libmagickcore-dev \
+    libcurl4-gnutls-dev \
+    zlib1g-dev \
+    libicu-dev \
+    supervisor \
+    git \
+    curl \
+    ssh \
+    rsync \
+    make \
+    awscli \
+    libzip-dev \
+    pngquant \
+    jpegoptim \
+    gnupg \
+    dirmngr \
+    wget \
+    unzip
 
-## Nginx
-RUN echo "deb http://nginx.org/packages/mainline/debian/ stretch nginx" >> /etc/apt/sources.list \
+# Install fonts and wkhtmltopdf
+RUN apt-get install -y --no-install-recommends \
+    libfontenc1 \
+    xfonts-75dpi \
+    xfonts-base \
+    xfonts-encodings \
+    xfonts-utils \
+    wkhtmltopdf \
+    libonig-dev \
+    nginx
+
+# Install PHP extensions
+RUN pecl install imagick xdebug && \
+    docker-php-ext-enable imagick xdebug
+
+# Install core PHP extensions
+RUN docker-php-ext-install -j$(nproc) \
+    pdo_mysql \
+    intl \
+    bcmath \
+    mbstring \
+    zip \
+    sockets \
+    gd \
+    opcache
+
+RUN if [ "$(uname -m)" = "aarch64" ]; then \
+    echo "deb [arch=arm64] http://nginx.org/packages/mainline/debian/ buster nginx" >> /etc/apt/sources.list; \
+    else \
+    echo "deb http://nginx.org/packages/mainline/debian/ buster nginx" >> /etc/apt/sources.list; \
+    fi \
     && wget -qO - http://nginx.org/keys/nginx_signing.key | apt-key add - \
-	&& apt-get update \
-	&& apt-get install --no-install-recommends --no-install-suggests -y \
-        nginx
+    && apt-get update \
+    && apt-get install --no-install-recommends --no-install-suggests -y nginx
 
-RUN pecl install \
-        imagick \
-        xdebug-3.1.5 \
-        unzip \
-    && docker-php-ext-install \
-        pdo_mysql \
-        intl \
-        bcmath \
-        mbstring \
-        zip \
-        sockets \
-        gd \
-    && docker-php-ext-enable \
-        opcache \
-        imagick \
-        xdebug \
-        gd
+# Cleanup to reduce image size
+RUN apt-get clean && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 
 COPY docker/php.ini /usr/local/etc/php/
 
-# Node
-RUN curl -sL https://deb.nodesource.com/setup_14.x | bash \
+RUN curl -sL https://deb.nodesource.com/setup_14.x | sed -e "s/sleep /echo /g" | bash \
     && apt-get install -y nodejs
 
-RUN curl -sS https://dl.yarnpkg.com/debian/pubkey.gpg | apt-key add - \
-    && echo "deb https://dl.yarnpkg.com/debian/ stable main" > /etc/apt/sources.list.d/yarn.list \
-    && apt-get update \
-    && apt-get install -y yarn \
+RUN npm install -g yarn \
     && npm install -g gulp \
     && npm rebuild node-sass
 
-# Composer
+# Composer (use a stable v2.x version)
 RUN curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer --version=2.2.0 \
     && rm -rf /tmp/* /var/tmp/*
 
-# Installing wkhtmltopdf
-RUN apt-get install -y --no-install-recommends libfontenc1 xfonts-75dpi xfonts-base xfonts-encodings xfonts-utils \
-    && curl -sL https://github.com/wkhtmltopdf/packaging/releases/download/0.12.6-1/wkhtmltox_0.12.6-1.stretch_amd64.deb --output /tmp/wkhtmltox.deb --silent \
-    && dpkg -i /tmp/wkhtmltox.deb \
-    && rm /tmp/wkhtmltox.deb
-
-# Forward request and error logs to docker log collector
+# Forward Nginx logs to Docker log collector
 RUN ln -sf /dev/stdout /var/log/nginx/access.log \
-	&& ln -sf /dev/stderr /var/log/nginx/error.log
+    && ln -sf /dev/stderr /var/log/nginx/error.log
 
-# Changing local time and fixing permissions
+# Timezone and permissions
 RUN unlink /etc/localtime \
     && ln -s /usr/share/zoneinfo/Europe/Paris /etc/localtime \
     && dpkg-reconfigure --frontend noninteractive tzdata \
@@ -89,7 +89,13 @@ RUN unlink /etc/localtime \
 
 EXPOSE 80 443
 
+RUN ln -sf /dev/stdout /var/stdout \
+    && ln -sf /dev/stderr /var/stderr
+
 ADD docker/start.sh /start.sh
 RUN chmod +x /start.sh
 
-CMD /start.sh
+ADD https://github.com/ufoscout/docker-compose-wait/releases/download/2.9.0/wait /wait
+RUN chmod +x /wait
+
+CMD /wait && /start.sh
